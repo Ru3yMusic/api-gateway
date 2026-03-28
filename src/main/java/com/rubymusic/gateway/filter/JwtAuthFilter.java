@@ -28,6 +28,7 @@ import java.util.Base64;
  *   <li>{@code X-User-Email}        — email claim</li>
  *   <li>{@code X-Display-Name}      — displayName claim</li>
  *   <li>{@code X-Profile-Photo-Url} — profilePhotoUrl claim</li>
+ *   <li>{@code X-User-Role}         — role claim (USER or ADMIN)</li>
  * </ul>
  * Downstream services trust these headers and never re-validate the token.
  *
@@ -82,12 +83,14 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
                 // Propagate identity to downstream services via internal headers
                 String displayName = claims.get("displayName", String.class);
                 String profilePhotoUrl = claims.get("profilePhotoUrl", String.class);
+                String role = claims.get("role", String.class);
                 ServerWebExchange mutated = exchange.mutate()
                         .request(r -> r
                                 .header("X-User-Id", claims.getSubject())
                                 .header("X-User-Email", claims.get("email", String.class))
                                 .header("X-Display-Name", displayName != null ? displayName : "")
-                                .header("X-Profile-Photo-Url", profilePhotoUrl != null ? profilePhotoUrl : ""))
+                                .header("X-Profile-Photo-Url", profilePhotoUrl != null ? profilePhotoUrl : "")
+                                .header("X-User-Role", role != null ? role : "USER"))
                         .build();
 
                 return chain.filter(mutated);
