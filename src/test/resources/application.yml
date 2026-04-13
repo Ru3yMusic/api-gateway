@@ -1,0 +1,21 @@
+spring:
+  config:
+    import: ""  # disable config-server for tests
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+
+jwt:
+  public-key: "test-placeholder"  # overridden per-test via field injection
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false

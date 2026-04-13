@@ -80,7 +80,13 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
                         .parseSignedClaims(token)
                         .getPayload();
 
-                // Propagate identity to downstream services via internal headers
+                // Propagate identity to downstream services via internal headers.
+                // NOTE (zero-trust): Spring's ServerHttpRequest.Builder copies ALL original
+                // headers from the incoming request first (via addAll), then only replaces
+                // headers that are explicitly set below. This means the original
+                // "Authorization: Bearer <token>" header IS preserved and forwarded to every
+                // downstream service so each service can independently re-validate the JWT —
+                // the core requirement of the zero-trust architecture.
                 String displayName = claims.get("displayName", String.class);
                 String profilePhotoUrl = claims.get("profilePhotoUrl", String.class);
                 String role = claims.get("role", String.class);
