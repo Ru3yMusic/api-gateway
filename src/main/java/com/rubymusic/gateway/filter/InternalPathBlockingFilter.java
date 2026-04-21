@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 /**
  * Global filter that blocks any external request targeting internal service paths.
  *
- * <p>Any request matching {@code /api/internal/**} is immediately rejected with
+ * <p>Anys request matching {@code /api/internal/**} is immediately rejected with
  * {@code 403 Forbidden} before it reaches route predicates or any downstream service.
  * Internal services communicate with each other via the internal network, bypassing
  * the public API Gateway entirely — so no legitimate external traffic should ever
