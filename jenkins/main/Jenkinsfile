@@ -6,12 +6,11 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '10'))
   }
   parameters {
-      string(name: 'IMAGE_TAG', defaultValue: '', description: 'Tag Docker opcional (ej: obsfix-20260421-01)')
+      string(name: 'IMAGE_TAG', defaultValue: 'obsfix-20260421-01', description: 'Tag Docker (ej: obsfix-20260421-01)')
   }
   environment {
     SONARQUBE_SERVER = 'sonarqube'
     DOCKER_IMAGE = 'darfelio/rbm-gateway'
-    DOCKER_TAG = "v${BUILD_NUMBER}"
     DEPLOY_HOST = '146.181.41.236'
     DEPLOY_USER = 'ubuntu'
   }
@@ -50,7 +49,10 @@ pipeline {
     stage('🔨 Build & Push Image') {
           steps {
             script {
-              env.DOCKER_TAG = params.IMAGE_TAG?.trim() ? params.IMAGE_TAG.trim() : "v${env.BUILD_NUMBER}"
+              if (!params.IMAGE_TAG?.trim()) {
+                error("IMAGE_TAG vacío. Ejecutá con 'Build with Parameters' e ingresá un tag.")
+              }
+              env.DOCKER_TAG = params.IMAGE_TAG.trim()
               echo "Using Docker tag: ${env.DOCKER_TAG}"
             }
             withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
@@ -64,7 +66,7 @@ pipeline {
                 docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
                 docker push ${DOCKER_IMAGE}:latest
                 echo "Verifying pushed tag exists in registry..."
-                docker manifest inspect ${DOCKER_IMAGE}:${DOCKER_TAG} > /dev/null
+                docker manifest inspect docker.io/${DOCKER_IMAGE}:${DOCKER_TAG} > /dev/null
                 docker logout
               '''
             }
