@@ -129,32 +129,35 @@ public class ReactorErrorHandlerConfig {
     private boolean isTransportDisconnect(Throwable throwable) {
         Throwable cause = throwable;
         for (int depth = 0; cause != null && depth < 16; depth++) {
-            String name = cause.getClass().getName();
-            if (name.equals("reactor.netty.channel.AbortedException")
-                    || name.equals("java.nio.channels.ClosedChannelException")
-                    || name.equals("io.netty.channel.StacklessClosedChannelException")
-                    || name.equals("io.netty.handler.timeout.ReadTimeoutException")
-                    || name.equals("io.netty.handler.codec.http.websocketx.WebSocketHandshakeException")
-                    || name.equals("reactor.netty.http.client.PrematureCloseException")) {
+            if (matchesKnownTransportException(cause) || matchesIoExceptionMessage(cause)) {
                 return true;
-            }
-            if (cause instanceof IOException) {
-                String msg = cause.getMessage();
-                if (msg != null) {
-                    String lower = msg.toLowerCase();
-                    if (lower.contains("connection reset by peer")
-                            || lower.contains("broken pipe")
-                            || lower.contains("forcibly closed")
-                            || lower.contains("connection was aborted")
-                            || lower.contains("an existing connection was forcibly closed")) {
-                        return true;
-                    }
-                }
             }
             Throwable next = cause.getCause();
             if (next == null || next == cause) break;
             cause = next;
         }
         return false;
+    }
+
+    private boolean matchesKnownTransportException(Throwable cause) {
+        String name = cause.getClass().getName();
+        return name.equals("reactor.netty.channel.AbortedException")
+                || name.equals("java.nio.channels.ClosedChannelException")
+                || name.equals("io.netty.channel.StacklessClosedChannelException")
+                || name.equals("io.netty.handler.timeout.ReadTimeoutException")
+                || name.equals("io.netty.handler.codec.http.websocketx.WebSocketHandshakeException")
+                || name.equals("reactor.netty.http.client.PrematureCloseException");
+    }
+
+    private boolean matchesIoExceptionMessage(Throwable cause) {
+        if (!(cause instanceof IOException)) return false;
+        String msg = cause.getMessage();
+        if (msg == null) return false;
+        String lower = msg.toLowerCase();
+        return lower.contains("connection reset by peer")
+                || lower.contains("broken pipe")
+                || lower.contains("forcibly closed")
+                || lower.contains("connection was aborted")
+                || lower.contains("an existing connection was forcibly closed");
     }
 }

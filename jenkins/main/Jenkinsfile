@@ -59,14 +59,12 @@ pipeline {
               sh '''
                 set -euo pipefail
                 echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
-                docker build \
+                docker buildx build --push \
                   -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
                   -t ${DOCKER_IMAGE}:latest \
                   .
-                docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                docker push ${DOCKER_IMAGE}:latest
                 echo "Verifying pushed tag exists in registry..."
-                docker manifest inspect docker.io/${DOCKER_IMAGE}:${DOCKER_TAG} > /dev/null
+                docker buildx imagetools inspect docker.io/${DOCKER_IMAGE}:${DOCKER_TAG} > /dev/null
                 docker logout
               '''
             }
