@@ -110,6 +110,18 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!--
+                        OOM diagnostic flags for `mvn spring-boot:run` (local dev).
+                        Production uses the same flags via the Dockerfile ENTRYPOINT
+                        but writes to /var/log/api-gateway/heap-dump.hprof so dumps
+                        can be mounted as a volume. Locally we use ${java.io.tmpdir}
+                        so the path resolves on every OS (Windows / macOS / Linux).
+                    -->
+                    <jvmArguments>
+                        -XX:+HeapDumpOnOutOfMemoryError
+                        -XX:HeapDumpPath=${java.io.tmpdir}/api-gateway-heap-dump.hprof
+                        -XX:+ExitOnOutOfMemoryError
+                    </jvmArguments>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
