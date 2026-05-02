@@ -21,6 +21,23 @@
         <java.version>21</java.version>
         <spring-cloud.version>2023.0.1</spring-cloud.version>
         <jjwt.version>0.12.5</jjwt.version>
+
+        <plugin-jacoco.version>0.8.11</plugin-jacoco.version>
+        <plugin-sonar.version>3.10.0.2594</plugin-sonar.version>
+
+        <!-- SONAR CONFIGURATION -->
+        <!--
+            Excluded from coverage:
+              - *Application.*  : Spring Boot bootstrap, no logic to test.
+              - ReactorErrorHandlerConfig.* : installs JVM-wide hooks (Reactor + Thread
+                uncaught handlers); cannot be unit-tested in isolation without polluting
+                other tests in the same JVM.
+        -->
+        <sonar.coverage.exclusions>
+            **/*Application.*,
+            **/config/ReactorErrorHandlerConfig.*,
+            **/target/**
+        </sonar.coverage.exclusions>
     </properties>
 
     <dependencyManagement>
@@ -129,6 +146,41 @@
                         </exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+
+            <!-- JACOCO -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${plugin-jacoco.version}</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*Application.class</exclude>
+                        <exclude>**/config/ReactorErrorHandlerConfig.class</exclude>
+                        <exclude>**/target/**</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>test-report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- SONARQUBE -->
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>${plugin-sonar.version}</version>
             </plugin>
         </plugins>
     </build>
